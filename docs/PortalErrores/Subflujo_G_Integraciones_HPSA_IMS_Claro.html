@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Subflujo G Integraciones HPSA IMS Claro</title>
+  <style>
+    :root {
+      --rojo: #E30613;
+      --gris: #6B7280;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Segoe UI, Roboto, Arial, sans-serif;
+      background: #fff;
+      color: #111;
+    }
+
+    header {
+      padding: 12px 16px;
+      border-bottom: 3px solid var(--rojo);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .tag {
+      background: var(--rojo);
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .bk-list {
+      margin: 8px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .bk-list li {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    .bk-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 6px 10px;
+      text-decoration: none;
+      color: #111;
+    }
+
+    .bk-btn:hover {
+      background: #f7f8fa;
+    }
+
+    @media (max-width: 1100px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Estilo contenedor Mermaid */
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 20px;
+      min-height: 500px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Subflujo G Integraciones HPSA IMS Claro</h1>
+    <span class="tag">Institucional</span>
+  </header>
+
+  <main>
+    <!-- Contenedor del Diagrama Mermaid -->
+    <div class="mermaid">
+      graph TD
+      classDef default fill:#eef2ff,stroke:#818cf8,stroke-width:1px,rx:5px,ry:5px;
+
+      B1[<b>B1. Recepción</b><br />Ingreso MyAsistencia360]
+      B2[<b>B2. Verificar integración</b><br />Validar estado en HPSA e IMS]
+      B3[<b>B3. Analizar consistencia</b><br />Comparar datos entre sistemas]
+      B4[<b>B4. Sincronización</b><br />Ejecutar procesos de sincronización]
+      B5[<b>B5. Validación y cierre</b><br />QA, evidencias y BK]
+
+      B1 --> B2
+      B2 --> B3
+      B3 --> B4
+      B4 --> B5
+    </div>
+
+    <aside class="panel">
+      <h2 style="margin:0 0 8px 0">B2. Verificar existencia</h2>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:8px">
+        Si el incidente llega por <strong>correo o llamada</strong>, debe registrarse en
+        <strong>MyAsistencia360</strong> antes de continuar.
+      </div>
+
+      <h3 style="margin:12px 0 6px 0">Ruta de ejecución</h3>
+      <ul style="margin:0 0 10px 18px;padding:0">
+        <li>Validar integración HPSA/IMS.</li>
+        <li>Confirmar consistencia entre sistemas.</li>
+      </ul>
+
+      <h3 style="margin:12px 0 6px 0">Artículos BK</h3>
+      <ul class="bk-list" id="bkList"></ul>
+    </aside>
+  </main>
+
+  <script src="LIBS/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  <script src="bk.config.js?v=3"></script>
+  <script>
+    function renderBKList(sectionKey) {
+      var ul = document.getElementById('bkList');
+      if (!ul) return;
+      var cfg = window.BK_CONFIG || {};
+      var list = cfg[sectionKey] || [];
+      ul.innerHTML = '';
+      if (!list.length) {
+        ul.innerHTML = '<li style="color:#6b7280">Sin BK registrados para ' + sectionKey + '</li>';
+        return;
+      }
+      list.forEach(function (item) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.href = item.url || '#';
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.className = 'bk-btn';
+        a.textContent = item.label || item.url;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }
+    renderBKList('G');
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ciclo de Vida Gestión de Incidentes RR</title>
+  <style>
+:root{--rojo:#E30613;--gris:#6B7280}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#111}
+header{padding:12px 16px;border-bottom:3px solid var(--rojo);display:flex;justify-content:space-between;align-items:center}
+h1{font-size:18px;margin:0}.tag{background:var(--rojo);color:#fff;border-radius:6px;padding:4px 8px;font-size:12px}
+main{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;padding:16px;align-items:start}
+.canvas{position:relative;border:1px solid #e5e7eb;border-radius:12px;min-height:580px;background:#fff;overflow:hidden}
+.panel{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff}
+.node{position:absolute;min-width:240px;background:#fff;border:1px solid #e5e7eb;border-left:6px solid var(--rojo);border-radius:10px;padding:10px 12px;cursor:default;box-shadow:0 1px 2px rgba(16,24,40,.06)}
+.node h3{font-size:14px;margin:0 0 4px 0}.node p{font-size:12px;margin:0;color:#374151}
+.arrow{stroke:var(--gris);stroke-width:2;fill:none;marker-end:url(#arr)}
+.bk-list{margin:8px 0 0 0;padding:0;list-style:none}
+.bk-list li{margin:6px 0;font-size:14px}
+.bk-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;text-decoration:none;color:#111}
+.bk-btn:hover{background:#f7f8fa}
+.icon{width:14px;height:14px;border-radius:50%;background:#2563eb;display:inline-block}
+@media (max-width:1100px){ main{grid-template-columns:1fr;}.panel{position:relative;top:auto;height:auto;max-height:none}}
+</style>
+</head>
+<body>
+  <header>
+    <h1>Ciclo de Vida de Gestión de Incidentes RR – MyIT / MyAsistencia360</h1>
+    <span class="tag">Institucional</span>
+  </header>
+
+  <main>
+    <section class="canvas" style="min-height:900px">
+      <svg width="0" height="0">
+        <defs>
+          <marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L10,4 L0,8 z" fill="var(--gris)"/>
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="node" style="left:40px;top:80px">
+        <h3>B1. Recepción del incidente</h3>
+        <p>Incidente reportado por MyAsistencia360 (canal estándar). Si llega por correo o Teams, debe registrarse primero en MyAsistencia360.</p>
+      </div>
+
+      <div class="node" style="left:400px;top:80px">
+        <h3>B2. Clasificación y asignación</h3>
+        <p>Revisar datos mínimos, clasificar el tipo de incidente (tarifas, inventario, seriales, integraciones, facturación, campañas, nuevos LI, otros) y asignar prioridad y responsable RR.</p>
+      </div>
+
+      <div class="node" style="left:600px;top:280px">
+        <h3>B3. Diagnóstico y validaciones RR</h3>
+        <p>Equipo RR / parametrización (HITSS) valida en sistemas (AI/IC/MC, TSU, LI, IMS/HPSA/SSW, visor) y consulta BK existentes. Si hay BK, seguirlo; si no, documentar hallazgos.</p>
+      </div>
+
+      <div class="node" style="left:380px;top:500px">
+        <h3>B4. Corrección y escalamiento</h3>
+        <p>Cuando Parametrización (HITSS) agota su margen de acción, el caso se deriva al equipo de Soporte HITSS (L2) para análisis especializado. Si el incidente requiere acciones en infraestructura, backend o código fuente, se escala a Canadá (L3). Los incidentes relacionados con políticas, reglas de negocio o procesos se direccionan al dueño del proceso correspondiente.</p>
+      </div>
+
+      <div class="node" style="left:520px;top:720px">
+        <h3>B5. Cierre y actualización de BK</h3>
+        <p>Validar solución (visor/simuladores). QA/HITSS verifica cuando aplique. Registrar evidencias, actualizar o crear BK reutilizable y cerrar el incidente en MyAsistencia360.</p>
+      </div>
+
+      <!-- Flechas del flujo -->
+      <svg class="arrow-layer" width="100%" height="100%" style="position:absolute;left:0;top:0;pointer-events:none">
+        <path class="arrow" d="M260 120 L400 120" />
+        <path class="arrow" d="M600 120 L640 120 L640 280" />
+        <path class="arrow" d="M600 320 L490 320 L490 500" />
+        <path class="arrow" d="M490 600 L490 660 L 630 660 L630 720" />
+      </svg>
+    </section>
+
+    <aside class="panel">
+      <h2>B2. Clasificación y registro RR</h2>
+      <p>Este paso asegura que todos los incidentes sigan el mismo ciclo, sin importar el canal por el que se reporten.</p>
+
+      <h3 style="margin:12px 0 6px 0">Ruta de ejecución</h3>
+      <ul style="margin:0 0 10px 18px;padding:0"><li>Registrar el incidente en MyAsistencia360 con datos completos (servicio, cliente, evidencias).</li><li>Clasificar el incidente por tipo (tarifa, inventario, seriales, integraciones, facturación, campañas, nuevos LI, otros).</li><li>Consultar BK aplicables antes de escalar.</li><li>Si Parametrización (HITSS) agota su margen de acción: transferir el caso a Soporte HITSS (L2).</li><li>Si requiere acciones en backend, infraestructura o código fuente: escalar a Canadá (L3).</li><li>Si corresponde a temas de proceso o reglas comerciales: direccionar al dueño del proceso.</li></ul>
+
+      <h3 style="margin:12px 0 6px 0">Flujos / BK relacionados</h3>
+      <p style="font-size:13px;margin:0 0 8px 0">Desde este ciclo se deriva a los subflujos técnicos según el tipo de incidente:</p>
+
+      <ul class="bk-list">
+        <li><a class="bk-btn" href="Subflujo_A_Seguridad_Autorizaciones_Claro.html" target="_blank"><span class="icon"></span>Subflujo A – Seguridad / Autorizaciones</a></li>
+        <li><a class="bk-btn" href="Subflujo_B_Servicio_Inventario_Claro.html" target="_blank"><span class="icon"></span>Subflujo B – Servicio / Inventario</a></li>
+        <li><a class="bk-btn" href="Subflujo_C_Tarifa_Division_Claro.html" target="_blank"><span class="icon"></span>Subflujo C – Tarifa / División</a></li>
+        <li><a class="bk-btn" href="Subflujo_D_Activacion_Seriales_Claro.html" target="_blank"><span class="icon"></span>Subflujo D – Activación / Seriales</a></li>
+        <li><a class="bk-btn" href="Subflujo_E_Facturacion_Prorateo_Claro.html" target="_blank"><span class="icon"></span>Subflujo E – Facturación / Prorrateo</a></li>
+        <li><a class="bk-btn" href="Subflujo_F_Visor_Campanias_Claro.html" target="_blank"><span class="icon"></span>Subflujo F – Visor / Campañas</a></li>
+        <li><a class="bk-btn" href="Subflujo_G_Integraciones_HPSA_IMS_Claro.html" target="_blank"><span class="icon"></span>Subflujo G – Integraciones HPSA / IMS / SSW</a></li>
+        <li><a class="bk-btn" href="Subflujo_H_Nuevos_Inventarios_LI_Claro.html" target="_blank"><span class="icon"></span>Subflujo H – Nuevos inventarios LI</a></li>
+      </ul>
+    </aside>
+  </main>
+</body>
+</html>
