@@ -141,7 +141,14 @@
       </ul>
 
       <h3 style="margin:12px 0 6px 0">Artículos BK</h3>
-      <ul class="bk-list" id="bkList"></ul>
+      <ul class="bk-list" id="bkList">
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B3_Item_MTADP310549CFBEE50_TipoInventarioFija.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B1 Item XXX Tipo de Inventario XXX no relacionado con el Inventario</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B3_Suscriptor_NoPuedeCambiar.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B2_Articulo xxx No Puede Cambiar el estado a xxx</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_Error_SinInventario.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B3 No hay suficiente inventario para el servicio ***</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_NuevosInventarios_CardlessNewland.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B4 Pairing tabla LI</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B6_Suscriptor_No_Tiene_Ningun_Servicio.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B6 Suscriptor No Tiene Ningún Servicio XXX</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B3_Item_DVN_TCH_13191300536100896_NoPermiteActivar.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">B5 No permite Activar aunque este Relacionado</a></li>
+      </ul>
     </aside>
   </main>
 
@@ -149,32 +156,7 @@
   <script>
     mermaid.initialize({ startOnLoad: true });
   </script>
-  <script src="bk.config.js?v=3"></script>
-  <script>
-    function renderBKList(sectionKey) {
-      var ul = document.getElementById('bkList');
-      if (!ul) return;
-      var cfg = window.BK_CONFIG || {};
-      var list = cfg[sectionKey] || [];
-      ul.innerHTML = '';
-      if (!list.length) {
-        ul.innerHTML = '<li style="color:#6b7280">Sin BK registrados para ' + sectionKey + '</li>';
-        return;
-      }
-      list.forEach(function (item) {
-        var li = document.createElement('li');
-        var a = document.createElement('a');
-        a.href = item.url || '#';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.className = 'bk-btn';
-        a.textContent = item.label || item.url;
-        li.appendChild(a);
-        ul.appendChild(li);
-      });
-    }
-    renderBKList('B');
-  </script>
+
 </body>
 
 </html>

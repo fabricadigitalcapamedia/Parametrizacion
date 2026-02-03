@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Subflujo E Facturacion Prorateo Claro</title>
+  <title>Subflujo D Activacion Seriales Claro</title>
   <style>
 :root{--rojo:#E30613;--gris:#6B7280}
 *{box-sizing:border-box}
@@ -26,7 +26,7 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;padding:16px;align-i
 </head>
 <body>
   <header>
-    <h1>Subflujo E Facturacion Prorateo Claro</h1>
+    <h1>Subflujo D Activacion Seriales Claro</h1>
     <span class="tag">Institucional</span>
   </header>
 
@@ -90,38 +90,16 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;padding:16px;align-i
 
       <h3 style="margin:12px 0 6px 0">Ruta de ejecución</h3>
       <ul style="margin:0 0 10px 18px;padding:0">
-        <li>Revisar tarifa y esquema de prorrateo.</li><li>Confirmar impacto en facturación.</li>
+        <li>Validar seriales y su relación con servicio.</li><li>Confirmar activación correcta.</li>
       </ul>
 
       <h3 style="margin:12px 0 6px 0">Artículos BK</h3>
-      <ul class="bk-list" id="bkList"></ul>
+      <ul class="bk-list" id="bkList">
+        <li style="color:#6b7280">Sin BK registrados para D</li>
+      </ul>
     </aside>
   </main>
-  <script src="bk.config.js"></script>
-  <script>
-    function renderBKList(sectionKey) {
-      var ul = document.getElementById('bkList');
-      if (!ul) return;
-      var cfg = window.BK_CONFIG || {};
-      var list = cfg[sectionKey] || [];
-      ul.innerHTML = '';
-      if (!list.length) {
-        ul.innerHTML = '<li style="color:#6b7280">Sin BK registrados para ' + sectionKey + '</li>';
-        return;
-      }
-      list.forEach(function(item) {
-        var li = document.createElement('li');
-        var a = document.createElement('a');
-        a.href = item.url || '#';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.className = 'bk-btn';
-        a.textContent = item.label || item.url;
-        li.appendChild(a);
-        ul.appendChild(li);
-      });
-    }
-    renderBKList('E');
-  </script>
+
+
 </body>
 </html>

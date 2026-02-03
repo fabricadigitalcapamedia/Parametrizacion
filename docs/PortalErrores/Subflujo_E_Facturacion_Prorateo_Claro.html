@@ -148,7 +148,14 @@
       </ul>
 
       <h3 style="margin:12px 0 6px 0">Artículos BK</h3>
-      <ul class="bk-list" id="bkList"></ul>
+      <ul class="bk-list" id="bkList">
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B2_Error_FaltaDescripcion_TCDIT33.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E1 Falta Descripción TCDIT33 Código Ajuste</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_Error_TarifaNoEncontrada.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E2_Current Rate Schedule not found. Subscriber not charged.</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/E3%20TUS0012%20No%20valid%20tariff%20found%20for%20su.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E3 TUS0012 No valid tariff found for su</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_Error_NoFactura_Disposicion.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E4 Error No Factura Disposición (Tarifas)</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_Servicio_Prorateo_AlteraFactura.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E5 Servicio con Prorrateo Altera Factura</a></li>
+        <li><a href="https://claromovilco.sharepoint.com/sites/coordinacion_lideresdeaplicaciones/Errores%20Parametrizacion/B4_TSU0010_MasterRateSchedule_NotFound.docx" target="_blank" rel="noopener noreferrer" class="bk-btn">E6 TSU0010 MasterRateSchedule Not Found</a></li>
+      </ul>
     </aside>
   </main>
 
@@ -156,32 +163,7 @@
   <script>
     mermaid.initialize({ startOnLoad: true });
   </script>
-  <script src="bk.config.js?v=3"></script>
-  <script>
-    function renderBKList(sectionKey) {
-      var ul = document.getElementById('bkList');
-      if (!ul) return;
-      var cfg = window.BK_CONFIG || {};
-      var list = cfg[sectionKey] || [];
-      ul.innerHTML = '';
-      if (!list.length) {
-        ul.innerHTML = '<li style="color:#6b7280">Sin BK registrados para ' + sectionKey + '</li>';
-        return;
-      }
-      list.forEach(function (item) {
-        var li = document.createElement('li');
-        var a = document.createElement('a');
-        a.href = item.url || '#';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.className = 'bk-btn';
-        a.textContent = item.label || item.url;
-        li.appendChild(a);
-        ul.appendChild(li);
-      });
-    }
-    renderBKList('E');
-  </script>
+
 </body>
 
 </html>
