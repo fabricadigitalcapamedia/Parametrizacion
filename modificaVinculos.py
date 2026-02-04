@@ -5,13 +5,11 @@ from tkinter import ttk, messagebox, simpledialog
 import threading
 import time
 from urllib.parse import urlparse, unquote
+from tkinter import filedialog
 
-# Configuración de rutas
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# La carpeta de documentos a escanear
-SEARCH_DIR = os.path.join(BASE_DIR, "docs", "PortalErrores")
-# Directorio base para rutas relativas (PortalErrores/...)
-DOCS_DIR = os.path.dirname(SEARCH_DIR)
+# Configuración de rutas por defecto
+DEFAULT_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_SEARCH_DIR = os.path.join(DEFAULT_BASE_DIR, "docs", "PortalErrores")
 
 # Extensiones permitidas (Whitelist)
 ALLOWED_EXTENSIONS = ('.doc', '.docx', '.pdf')
@@ -29,11 +27,16 @@ class LinkManagerApp:
         style.configure("Treeview", font=('Segoe UI', 10), rowheight=25)
         
         self.links_data = [] 
+        self.search_dir = DEFAULT_SEARCH_DIR
+        self.docs_dir = os.path.dirname(self.search_dir)
         
         self.create_widgets()
         
-        # Iniciar escaneo automático al arranque
-        self.root.after(100, self.start_scan_thread)
+        # Iniciar escaneo automático al arranque si existe la ruta por defecto
+        if os.path.exists(self.search_dir):
+            self.root.after(100, self.start_scan_thread)
+        else:
+            self.status_var.set("Seleccione la carpeta de PortalErrores para comenzar.")
 
     def create_widgets(self):
         # --- Cabecera / Controles ---
@@ -53,6 +56,19 @@ class LinkManagerApp:
                                   command=self.edit_selected, 
                                   font=("Segoe UI", 10), bg="#e0f2fe", relief="flat", padx=10)
         self.btn_edit.pack(side=tk.RIGHT, padx=10)
+
+        self.btn_folder = tk.Button(control_frame, text="📂 Seleccionar Carpeta", 
+                                    command=self.select_folder, 
+                                    font=("Segoe UI", 10), bg="#dcfce7", relief="flat", padx=10)
+        self.btn_folder.pack(side=tk.RIGHT, padx=10)
+
+        # --- Barra de Carpeta Seleccionada ---
+        path_frame = tk.Frame(self.root, bg="#f9fafb", padx=20, pady=2)
+        path_frame.pack(side=tk.TOP, fill=tk.X)
+        self.path_var = tk.StringVar(value=f"Carpeta: {self.search_dir}")
+        self.path_lbl = tk.Label(path_frame, textvariable=self.path_var, 
+                                 font=("Segoe UI", 8, "italic"), anchor="w", bg="#f9fafb", fg="#6b7280")
+        self.path_lbl.pack(side=tk.LEFT, fill=tk.X)
 
         # --- Barra de Progreso y Estado ---
         status_frame = tk.Frame(self.root, bg="#ffffff", padx=20, pady=5)
@@ -106,18 +122,26 @@ class LinkManagerApp:
         self.progress['value'] = 0
         threading.Thread(target=self.scan_files, daemon=True).start()
 
+    def select_folder(self):
+        folder = filedialog.askdirectory(initialdir=self.search_dir, title="Seleccionar carpeta PortalErrores")
+        if folder:
+            self.search_dir = folder
+            self.docs_dir = os.path.dirname(self.search_dir)
+            self.path_var.set(f"Carpeta: {self.search_dir}")
+            self.start_scan_thread()
+
     def scan_files(self):
         try:
             self.update_status("Iniciando escaneo de archivos...", 5)
             self.links_data = []
             
-            if not os.path.exists(SEARCH_DIR):
-                self.root.after(0, lambda: messagebox.showerror("Error", f"No se encontró la carpeta: {SEARCH_DIR}"))
+            if not os.path.exists(self.search_dir):
+                self.root.after(0, lambda: messagebox.showerror("Error", f"No se encontró la carpeta: {self.search_dir}"))
                 self.root.after(0, self.finish_scan)
                 return
 
             html_files = []
-            for root, dirs, files in os.walk(SEARCH_DIR):
+            for root, dirs, files in os.walk(self.search_dir):
                 for f in files:
                     if f.lower().endswith('.html'):
                         html_files.append(os.path.join(root, f))
@@ -133,7 +157,7 @@ class LinkManagerApp:
             link_pattern = re.compile(r'(<a\s+[^>]*?href=["\']([^"\']+)["\'][^>]*>(.*?)</a>)', re.IGNORECASE | re.DOTALL)
 
             for idx, file_path in enumerate(html_files):
-                rel_path = os.path.relpath(file_path, DOCS_DIR).replace("\\", "/")
+                rel_path = os.path.relpath(file_path, self.docs_dir).replace("\\", "/")
                 self.update_status(f"Analizando: {rel_path}", 10 + (idx / total_files * 85))
                 
                 try:
