@@ -16,7 +16,7 @@ class GitSyncApp:
     def __init__(self, root):
         self.root = root
         self.root.title("SincroGit - Sincronizador de Repositorios")
-        self.root.geometry("750x800")
+        self.root.geometry("750x850")
         
         # Variables de estado
         self.git_executable = None
@@ -66,7 +66,7 @@ class GitSyncApp:
 
         # --- Marco 2: Configuración Remota (GitHub) ---
         self.frame_remote = ttk.LabelFrame(self.root, text="2. Configuración GitHub", padding=10)
-        # Se ocultará hasta validar
+        # Se ocultará hasta validar o clonar
         
         lbl_url = ttk.Label(self.frame_remote, text="URL Repositorio GitHub:")
         lbl_url.grid(row=0, column=0, sticky="w")
@@ -92,14 +92,20 @@ class GitSyncApp:
         # --- Marco 3: Operaciones ---
         self.frame_ops = ttk.LabelFrame(self.root, text="3. Operaciones", padding=10)
         
-        btn_pull = ttk.Button(self.frame_ops, text="PULL (Actualizar)", command=lambda: self._run_thread(self._op_pull))
-        btn_pull.pack(side="left", fill="x", expand=True, padx=5)
+        # Botón Clonar (Oculto por defecto)
+        self.btn_clone = ttk.Button(self.frame_ops, text="CLONAR REPOSITORIO", command=lambda: self._run_thread(self._op_clone))
         
-        btn_status = ttk.Button(self.frame_ops, text="STATUS (Estado)", command=lambda: self._run_thread(self._op_status))
-        btn_status.pack(side="left", fill="x", expand=True, padx=5)
+        # Botones Normales
+        self.btn_pull = ttk.Button(self.frame_ops, text="1. PULL (Actualizar)", command=lambda: self._run_thread(self._op_pull))
+        self.btn_status = ttk.Button(self.frame_ops, text="2. STATUS (Estado)", command=lambda: self._run_thread(self._op_status))
+        self.btn_apply = ttk.Button(self.frame_ops, text="3. APPLY (Subir)", command=self._prompt_commit_msg)
+
+        # Pack inicial de botones normales (deshabilitados hasta validar)
+        self.btn_pull.pack(side="left", fill="x", expand=True, padx=5)
+        self.btn_status.pack(side="left", fill="x", expand=True, padx=5)
+        self.btn_apply.pack(side="left", fill="x", expand=True, padx=5)
         
-        btn_apply = ttk.Button(self.frame_ops, text="APPLY (Guardar y Subir)", command=self._prompt_commit_msg)
-        btn_apply.pack(side="left", fill="x", expand=True, padx=5)
+        self._disable_ops()
 
         # --- Marco 4: Salida y Progreso ---
         frame_log = ttk.LabelFrame(self.root, text="Registro de Actividad", padding=10)
@@ -110,6 +116,28 @@ class GitSyncApp:
 
         self.progress = ttk.Progressbar(frame_log, mode='indeterminate')
         self.progress.pack(fill="x", pady=5)
+
+    def _disable_ops(self):
+        for btn in [self.btn_pull, self.btn_status, self.btn_apply, self.btn_clone]:
+            btn.configure(state='disabled')
+
+    def _enable_normal_ops(self):
+        self.btn_clone.pack_forget()
+        self.btn_pull.pack(side="left", fill="x", expand=True, padx=5)
+        self.btn_status.pack(side="left", fill="x", expand=True, padx=5)
+        self.btn_apply.pack(side="left", fill="x", expand=True, padx=5)
+        
+        self.btn_pull.configure(state='normal')
+        self.btn_status.configure(state='normal')
+        self.btn_apply.configure(state='normal')
+
+    def _enable_clone_op(self):
+        self.btn_pull.pack_forget()
+        self.btn_status.pack_forget()
+        self.btn_apply.pack_forget()
+        
+        self.btn_clone.pack(side="left", fill="x", expand=True, padx=20)
+        self.btn_clone.configure(state='normal')
 
     def _browse_git_path(self):
         path = filedialog.askdirectory(title="Seleccionar Carpeta Portable Git (Ej: D:\\PortableGit)")
@@ -130,7 +158,6 @@ class GitSyncApp:
                 child.configure(state='disabled')
 
     def _log(self, message, error=False):
-        # UI Update debe ser en main thread
         self.root.after(0, lambda: self._val_log(message, error))
 
     def _val_log(self, message, error):
@@ -147,7 +174,6 @@ class GitSyncApp:
             self.root.after(0, lambda: messagebox.showinfo(title, msg))
 
     def _find_git_exe(self, base_path):
-        # Buscar git.exe en ubicaciones comunes dentro de la carpeta portable
         possible_paths = [
             os.path.join(base_path, "bin", "git.exe"),
             os.path.join(base_path, "cmd", "git.exe"),
@@ -173,19 +199,17 @@ class GitSyncApp:
         exe = self._find_git_exe(git_path)
         if not exe:
             self._log(f"No se encontró git.exe en {git_path}", error=True)
-            messagebox.showerror("Error", "No se encontró el ejecutable de git (git.exe) en la carpeta seleccionada.\nAsegúrese de seleccionar la raíz de PortableGit.")
+            messagebox.showerror("Error", "No se encontró git.exe en la carpeta portable.")
             return
         self.git_executable = exe
-        self._log(f"Git validado en: {exe}")
+        self._log(f"Git: {exe}")
 
         # 2. Validar Repositorio
         if not os.path.isdir(repo_path):
             self._log("La ruta del repositorio no existe.", error=True)
             return
 
-        # Verificar si es un repo git con el binario encontrado
         try:
-            # CREATE_NO_WINDOW es flag específico de Windows
             startupinfo = None
             if sys.platform.startswith("win"):
                 startupinfo = subprocess.STARTUPINFO()
@@ -200,8 +224,9 @@ class GitSyncApp:
                 self._log("Repositorio Git válido detectado.")
                 self.frame_remote.pack(fill="x", padx=10, pady=5)
                 self.frame_ops.pack(fill="x", padx=10, pady=5)
+                self._enable_normal_ops()
                 
-                # Intentar obtener URL existente para pre-llenar
+                # Intentar obtener URL
                 try:
                     res_url = subprocess.run(
                         [self.git_executable, "config", "--get", "remote.origin.url"],
@@ -214,8 +239,18 @@ class GitSyncApp:
                 except:
                     pass
             else:
-                self._log("La carpeta seleccionada NO es un repositorio Git válido.", error=True)
-                messagebox.showerror("Error Validacion", "La carpeta seleccionada no es un repositorio Git válido.")
+                # NO es repo git -> Ofrecer clonar
+                self._log("La carpeta seleccionada NO es un repositorio Git.", error=True)
+                if messagebox.askyesno("Repositorio No Encontrado", 
+                                       "La carpeta local seleccionada NO es un repositorio Git válido.\n\n"
+                                       "¿Desea CLONAR un repositorio de GitHub en esta ubicación?"):
+                    self.frame_remote.pack(fill="x", padx=10, pady=5)
+                    self.frame_ops.pack(fill="x", padx=10, pady=5)
+                    self._enable_clone_op()
+                    self._log("Modo Clonación activado. Ingrese URL y Credenciales.")
+                else:
+                    self._disable_ops()
+
         except Exception as e:
             self._log(f"Error al validar: {str(e)}", error=True)
 
@@ -230,21 +265,26 @@ class GitSyncApp:
             if not user or not token:
                 return None
             
-            # Insertar credenciales en la URL si es HTTPS
             if url.startswith("https://") and "@" not in url:
                 clean_url = url.replace("https://", "")
                 return f"https://{user}:{token}@{clean_url}"
             return url 
         return url
 
-    def _run_git(self, args, description):
-        """Ejecuta comando git y retorna (éxito:bool, salida:str)"""
-        if not self.git_executable or not self.repo_path.get():
+    def _run_git(self, args, description, cwd=None):
+        if not self.git_executable:
             return False, "Configuración incompleta."
+        
+        run_cwd = cwd if cwd else self.repo_path.get()
 
         try:
+            # En modo clonación, args[0] es 'clone'. 
+            # Si usuario puso credenciales, la URL va impresa en log... 
+            # DEBEMOS OCULTAR CREDENCIALES EN LOG
+            cmd_str_log = f"{description}"
+            
             cmd = [self.git_executable] + args
-            self._log(f"Ejecutando: {description}...")
+            self._log(f"Ejecutando: {cmd_str_log}...")
             
             startupinfo = None
             if sys.platform.startswith("win"):
@@ -252,7 +292,7 @@ class GitSyncApp:
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
             process = subprocess.Popen(
-                cmd, cwd=self.repo_path.get(), 
+                cmd, cwd=run_cwd, 
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                 text=True, startupinfo=startupinfo
             )
@@ -261,7 +301,6 @@ class GitSyncApp:
             if stdout:
                 self._log(stdout)
             if stderr:
-                # Git usa stderr para mensajes informativos a veces, pero lo logueamos
                 self._log(stderr, error=False) 
             
             if process.returncode == 0:
@@ -276,21 +315,21 @@ class GitSyncApp:
             return False, msg
 
     def _run_thread(self, target_func, *args):
-        if self.is_running:
-            return
+        if self.is_running: return
         self.is_running = True
         self.progress.start(10)
         
-        # Deshabilitar controles UI
-        for child in self.frame_ops.winfo_children():
-            child.configure(state='disabled')
-        self.btn_validate.configure(state='disabled')
+        # Deshabilitar botones durante operación
+        for btn in [self.btn_pull, self.btn_status, self.btn_apply, self.btn_clone, self.btn_validate]:
+            try:
+                btn.configure(state='disabled')
+            except: pass
 
         def wrapper():
             try:
                 target_func(*args)
             except Exception as e:
-                self._log(f"Error inesperado en hilo: {e}", True)
+                self._log(f"Error inesperado: {e}", True)
             finally:
                 self.root.after(0, self._finish_thread)
 
@@ -299,25 +338,57 @@ class GitSyncApp:
     def _finish_thread(self):
         self.progress.stop()
         self.is_running = False
-        # Habilitar botones
-        for child in self.frame_ops.winfo_children():
-            child.configure(state='normal')
         self.btn_validate.configure(state='normal')
+        
+        # Restaurar estado botones según contexto (si es clone mode o normal)
+        # Check si se activó el modo normal via validación posterior
+        # Simplemente re-validamos visualmente
+        if self.btn_clone.winfo_ismapped():
+            self.btn_clone.configure(state='normal')
+        else:
+            self.btn_pull.configure(state='normal')
+            self.btn_status.configure(state='normal')
+            self.btn_apply.configure(state='normal')
 
     # --- OPERACIONES ---
 
+    def _op_clone(self):
+        url = self._get_remote_url_with_auth()
+        if not url:
+            self._show_msg("Error", "URL de GitHub requerida.", True)
+            return
+        
+        # Confirmación
+        confirm = messagebox.askyesno(
+            "Confirmar Clonación", 
+            f"Se clonará el repositorio desde:\n{self.github_url.get()}\n\nHacia la carpeta:\n{self.repo_path.get()}\n\n¿Desea continuar?"
+        )
+        if not confirm: return
+
+        # Clonar en directorio actual (.)
+        # git clone <url> .
+        # Requiere carpeta vacía usualmente.
+        cmd = ["clone", url, "."]
+        
+        success, _ = self._run_git(cmd, "Clonando Repositorio")
+        
+        if success:
+            self._show_msg("Éxito", "Repositorio clonado correctamente.")
+            # Auto-revalidar para cambiar a modo normal
+            self.root.after(0, self._validate_setup)
+        else:
+            self._show_msg("Error", "Falló la clonación. Revise que la carpeta esté vacía y las credenciales sean correctas.", True)
+
     def _op_pull(self):
+        # Confirmación
+        if not messagebox.askyesno("Confirmar Pull", "Esta acción descargará los cambios del repositorio remoto (GitHub) y los fusionará con su versión local.\n\n¿Desea continuar?"):
+            return
+
         url = self._get_remote_url_with_auth()
         if not url:
             self._show_msg("Error", "URL de GitHub requerida.", True)
             return
 
-        # git pull <url> main
-        # Ojo: si la rama local se llama master, esto tratará de fusionar main en master.
-        # Asumimos que el usuario trabaja en main o quiere traer main.
-        # Para ser más seguro, usamos: git pull origin main (si el remoto está configurado)
-        # O git pull URL main.
-        
         cmd = ["pull", url, "main"]
         success, _ = self._run_git(cmd, "Pull desde Main")
         
@@ -327,12 +398,15 @@ class GitSyncApp:
             self._show_msg("Error", "Falló la operación Pull. Revise el registro.", True)
 
     def _op_status(self):
+        # Confirmación
+        if not messagebox.askyesno("Confirmar Status", "Esta acción verificará el estado del repositorio local y buscará diferencias con la versión remota (GitHub).\n\n¿Desea continuar?"):
+            return
+
         url = self._get_remote_url_with_auth()
         if not url:
             self._show_msg("Error", "URL de GitHub requerida.", True)
             return
         
-        # 1. Fetch para actualizar referencias
         cmd_fetch = ["fetch", url, "main"]
         ok_fetch, _ = self._run_git(cmd_fetch, "Fetch Remote Main")
         
@@ -340,14 +414,9 @@ class GitSyncApp:
             self._show_msg("Error", "No se pudo conectar con el repositorio remoto (Fetch falló).", True)
             return
 
-        # 2. Status Local
         self._run_git(["status"], "Estado Local")
-
-        # 3. Diferencias
-        # Mostramos qué cambiaría si fusionamos: git diff HEAD...FETCH_HEAD
-        # FETCH_HEAD es donde apuntó el último fetch.
         self._log("--- DIFERENCIAS CON REMOTO (main) ---")
-        self._run_git(["diff", "--stat", "HEAD", "FETCH_HEAD"], "Calculando diferencias (Local vs Remoto)")
+        self._run_git(["diff", "--stat", "HEAD", "FETCH_HEAD"], "Calculando diferencias")
 
         self._show_msg("Status", "Revisión completada. Ver registro.")
 
@@ -355,6 +424,11 @@ class GitSyncApp:
         if not self.github_url.get():
              messagebox.showwarning("Falta URL", "Primero debe validar y configurar la URL.")
              return
+        
+        # Confirmación Previa
+        if not messagebox.askyesno("Confirmar Apply", "Esta acción preparará todos los cambios locales, creará un Commit y los subirá (Push) a GitHub.\n\n¿Desea continuar?"):
+            return
+
         msg = simpledialog.askstring("Confirmar Cambios", "Ingrese el mensaje del Commit:")
         if msg:
             self._run_thread(self._op_apply, msg)
@@ -362,14 +436,11 @@ class GitSyncApp:
     def _op_apply(self, message):
         url = self._get_remote_url_with_auth()
         
-        # 1. Add
         ok_add, output = self._run_git(["add", "."], "Stage (git add .)")
         if not ok_add: 
             self._show_msg("Error", "Falló git add.", True)
             return
 
-        # 2. Commit
-        # Verificamos si hay algo que commitear
         status_ok, status_out = self._run_git(["status", "--porcelain"], "Verificando cambios")
         if not status_out.strip():
             self._log("No hay cambios pendientes para commit.")
@@ -379,19 +450,17 @@ class GitSyncApp:
                 self._show_msg("Error", "Falló git commit.", True)
                 return
 
-        # 3. Push
         cmd_push = ["push", url, "main"]
         ok_push, _ = self._run_git(cmd_push, "Push a GitHub Main")
         
         if ok_push:
             self._show_msg("Éxito", "Cambios aplicados y sincronizados correctamente.")
         else:
-            self._show_msg("Error", "Error al subir cambios a GitHub (Push). Revise credenciales o conflictos.", True)
+            self._show_msg("Error", "Error al subir cambios a GitHub (Push).", True)
 
 if __name__ == "__main__":
     if sys.platform.startswith('win'):
         try:
-            # Mejorar resolución DPI en Windows
             from ctypes import windll
             windll.shcore.SetProcessDpiAwareness(1)
         except:
