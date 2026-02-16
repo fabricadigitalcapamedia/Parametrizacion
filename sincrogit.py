@@ -27,6 +27,7 @@ class GitSyncApp:
         self.token = tk.StringVar()
         self.use_auth = tk.BooleanVar(value=False)
         self.is_running = False
+        self.using_system_git = False
 
         # Configurar estilos
         self.style = ttk.Style()
@@ -34,6 +35,7 @@ class GitSyncApp:
         self.style.configure("TLabel", padding=5)
 
         self._build_ui()
+        self.root.after(200, self._initial_check)
 
     def _build_ui(self):
         # --- Marco 1: Configuración Local ---
@@ -44,11 +46,11 @@ class GitSyncApp:
         lbl_git = ttk.Label(frame_config, text="Carpeta Portable Git:")
         lbl_git.grid(row=0, column=0, sticky="w")
         
-        entry_git = ttk.Entry(frame_config, textvariable=self.git_portable_path, width=50)
-        entry_git.grid(row=0, column=1, padx=5)
+        self.entry_git = ttk.Entry(frame_config, textvariable=self.git_portable_path, width=50)
+        self.entry_git.grid(row=0, column=1, padx=5)
         
-        btn_browse_git = ttk.Button(frame_config, text="Examinar...", command=self._browse_git_path)
-        btn_browse_git.grid(row=0, column=2)
+        self.btn_browse_git = ttk.Button(frame_config, text="Examinar...", command=self._browse_git_path)
+        self.btn_browse_git.grid(row=0, column=2)
 
         # Selector Repositorio Local
         lbl_repo = ttk.Label(frame_config, text="Carpeta Repositorio Local:")
@@ -185,24 +187,81 @@ class GitSyncApp:
                 return p
         return None
 
+    def _detect_system_git(self):
+        # 1. Intentar detectar si 'git' está en el PATH
+        try:
+            startupinfo = None
+            if sys.platform.startswith("win"):
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            
+            result = subprocess.run(["git", "--version"], capture_output=True, startupinfo=startupinfo, text=True)
+            if result.returncode == 0:
+                return "git" # Está en el PATH y funciona
+        except:
+            pass
+        
+        # 2. Buscar en rutas comunes de instalación en Windows
+        common_paths = [
+            r"C:\Program Files\Git\cmd\git.exe",
+            r"C:\Program Files\Git\bin\git.exe",
+            r"C:\Program Files (x86)\Git\cmd\git.exe",
+            r"C:\Program Files (x86)\Git\bin\git.exe",
+             os.path.expanduser(r"~\AppData\Local\Programs\Git\cmd\git.exe"),
+        ]
+        for p in common_paths:
+            if os.path.exists(p):
+                return p
+        return None
+
+    def _initial_check(self):
+        system_git = self._detect_system_git()
+        if system_git:
+            msg = "Se ha detectado una instalación de Git en el sistema.\n\n" \
+                  "¿Desea utilizar la versión instalada en lugar de buscar una versión Portable?"
+            if messagebox.askyesno("Git Detectado", msg):
+                self.using_system_git = True
+                self.git_executable = system_git
+                self.git_portable_path.set(f"GIT DEL SISTEMA ({system_git})")
+                
+                # Bloquear controles de Git Portable
+                self.entry_git.configure(state='disabled')
+                self.btn_browse_git.configure(state='disabled')
+                
+                self._log(f"Modo: Git instalado en sistema detectado ({system_git}).")
+            else:
+                self._log("Usuario optó por configurar Git Portable manualmente.")
+        else:
+            self._log("No se detectó Git instalado. Se requiere configurar Git Portable.")
+
     def _validate_setup(self):
-        git_path = self.git_portable_path.get()
         repo_path = self.repo_path.get()
 
-        if not git_path or not repo_path:
-            messagebox.showwarning("Faltan Datos", "Por favor seleccione ambas carpetas.")
+        # Validación inicial de entradas
+        if not self.using_system_git:
+            if not self.git_portable_path.get():
+                messagebox.showwarning("Faltan Datos", "Por favor seleccione la carpeta de Git Portable.")
+                return
+        
+        if not repo_path:
+            messagebox.showwarning("Faltan Datos", "Por favor seleccione la carpeta del Repositorio Local.")
             return
 
         self._log("Validando configuración...")
         
         # 1. Validar Git Executable
-        exe = self._find_git_exe(git_path)
-        if not exe:
-            self._log(f"No se encontró git.exe en {git_path}", error=True)
-            messagebox.showerror("Error", "No se encontró git.exe en la carpeta portable.")
-            return
-        self.git_executable = exe
-        self._log(f"Git: {exe}")
+        if self.using_system_git:
+            # Si usamos sistema, ya confiamos en lo detectado, pero verificamos integridad básica si es ruta completa
+            self._log(f"Usando Git (Sistema): {self.git_executable}")
+        else:
+            git_path = self.git_portable_path.get()
+            exe = self._find_git_exe(git_path)
+            if not exe:
+                self._log(f"No se encontró git.exe en {git_path}", error=True)
+                messagebox.showerror("Error", "No se encontró git.exe en la carpeta portable.")
+                return
+            self.git_executable = exe
+            self._log(f"Git (Portable): {exe}")
 
         # 2. Validar Repositorio
         if not os.path.isdir(repo_path):
